@@ -1,3 +1,4 @@
+
 #! /usr/bin/env python
 #
 # Example program using ircbot.py.
@@ -7,30 +8,30 @@
 """A simple example bot.
 
 This is an example bot that uses the SingleServerIRCBot class from
-ircbot.py.  The bot enters a channel and listens for commands in
-private messages and channel traffic.  Commands in channel messages
+ircbot.py. The bot enters a channel and listens for commands in
+private messages and channel traffic. Commands in channel messages
 are given by prefixing the text by the bot name followed by a colon.
 It also responds to DCC CHAT invitations and echos data sent in such
 sessions.
 
 The known commands are:
 
-    stats -- Prints some channel information.
+stats -- Prints some channel information.
 
-    disconnect -- Disconnect the bot.  The bot will try to reconnect
-                  after 60 seconds.
+disconnect -- Disconnect the bot. The bot will try to reconnect
+after 60 seconds.
 
-    die -- Let the bot cease to exist.
+die -- Let the bot cease to exist.
 
-    dcc -- Let the bot invite you to a DCC CHAT connection.
+dcc -- Let the bot invite you to a DCC CHAT connection.
 """
 
 from ircbot import SingleServerIRCBot
 from irclib import nm_to_n, nm_to_h, irc_lower, ip_numstr_to_quad, ip_quad_to_numstr
 
 class TestBot(SingleServerIRCBot):
-    def __init__(self, channel, nickname, server, port=6667):
-        SingleServerIRCBot.__init__(self, [(server, port)], nickname, nickname)
+    def __init__(self, channel, nickname, server, password="", port=6667, sslsock=False):
+        SingleServerIRCBot.__init__(self, [(server, port)], nickname, nickname, password, sslsock)
         self.channel = channel
 
     def on_nicknameinuse(self, c, e):
@@ -94,24 +95,34 @@ class TestBot(SingleServerIRCBot):
 
 def main():
     import sys
-    if len(sys.argv) != 4:
-        print("Usage: testbot <server[:port]> <channel> <nickname>")
+    password = ""
+    sslsock = False
+
+    if len(sys.argv) == 5:
+        password = sys.argv[4]
+    elif len(sys.argv) < 4:
+        print("Usage: testbot <server[:port]> <channel> <nickname> [password]")
         sys.exit(1)
 
     s = sys.argv[1].split(":", 1)
     server = s[0]
     if len(s) == 2:
         try:
+            if s[1][0] == "+":
+                sslsock = True
+                port = int(s[1][1:])
             port = int(s[1])
+           
         except ValueError:
             print("Error: Erroneous port.")
             sys.exit(1)
     else:
         port = 6667
+   
     channel = sys.argv[2]
     nickname = sys.argv[3]
 
-    bot = TestBot(channel, nickname, server, port)
+    bot = TestBot(channel, nickname, server, password, port, sslsock)
     bot.start()
 
 if __name__ == "__main__":
