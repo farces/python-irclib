@@ -494,7 +494,10 @@ was passed to the connect() method. """
                 new_data = self.socket.read(2**14)
             else:
                 new_data = self.socket.recv(2**14)
-            new_data = new_data.decode('utf8')
+            try: # handles unicode/latin hybrid encoding
+                new_data = new_data.decode('utf8')
+           	except UnicodeDecodeError:
+           	    new_data = new_data.decode('cp1252')
         except socket.error as x:
             # The server hung up.
             self.disconnect("Connection reset by peer")
